@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SalesAPE Booking Agent</title>
+    <style>
+        body { font-family: Arial; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .booking { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .confirmed { border-left: 4px solid #10b981; }
+        .demo-phone { background: #000; color: #0f0; padding: 20px; border-radius: 10px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🤖 SalesAPE Booking Agent</h1>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+            <h2>Today's Appointments</h2>
+            <div id="bookings"></div>
+        </div>
+        
+        <div>
+            <h2>Live Demo</h2>
+            <div class="demo-phone">
+                <p>Customer: "I want to book an appointment"</p>
+                <p>Bot: "Available slots tomorrow:<br>
+                1. 9:00<br>
+                2. 10:00<br>
+                3. 11:00<br>
+                Reply with number to book"</p>
+                <p>Customer: "2"</p>
+                <p>Bot: "✅ Booked for tomorrow at 10:00"</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Fetch and display bookings
+        fetch('/api/bookings')
+            .then(r => r.json())
+            .then(bookings => {
+                const html = bookings.map(b => 
+                    `<div class="booking confirmed">
+                        <strong>${b.time}</strong> - ${b.phone}
+                        <span style="float: right">✅ ${b.status}</span>
+                     </div>`
+                ).join('');
+                document.getElementById('bookings').innerHTML = html || '<p>No bookings yet</p>';
+            });
+            
+        // Auto-refresh every 5 seconds
+        setInterval(() => location.reload(), 5000);
+    </script>
+</body>
+</html>
