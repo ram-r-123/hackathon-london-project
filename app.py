@@ -4,12 +4,18 @@ from datetime import datetime, timedelta
 import sqlite3
 import json
 import re
+from livekit import api
 
 app = Flask(__name__)
 
 # Ollama setup
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "llama3.2"  # Change to your preferred model
+
+# LiveKit setup - get these from your LiveKit Cloud dashboard or self-hosted instance
+LIVEKIT_URL = "wss://chatbot-ioizuto6.livekit.cloud"
+LIVEKIT_API_KEY = "APIPU2w83w39yiy"
+LIVEKIT_API_SECRET = "bbHofJrpBTQHlqU6gS6G5CoiUrhhyogAdGhI4q2EYpC"
 
 # Telegram setup (message @BotFather on Telegram, type /newbot to get these)
 TELEGRAM_BOT_TOKEN = '8476030398:AAGjXQbdHrAjrFO4cC2M89S1m96XE6AFt1g'
@@ -72,18 +78,31 @@ def get_db():
 def chat_with_ollama(user_message, conversation_history=""):
     """Send a message to Ollama and get AI response"""
 
-    system_prompt = f"""You are a friendly booking assistant for SalesAPE. Help customers book appointments.
+    system_prompt = f"""You are a friendly customer service assistant for QuickFlow Plumbing, a 24/7 emergency plumbing service.
 
-Available time slots: {', '.join(SLOTS)} (Monday-Friday)
-Today's date: {datetime.now().strftime('%Y-%m-%d')}
+Our services include:
+- Leak repairs
+- Drain cleaning
+- Pipe installation
+- Water heater repair/installation
+- Toilet repairs
+- Emergency services (24/7)
+
+Pricing (estimates):
+- Service call: $75-100
+- Leak repair: $150-400
+- Drain cleaning: $100-250
+- Water heater: $800-2000
+- Emergency after-hours: +50% surcharge
 
 Your job:
-1. Greet customers and ask what they need
-2. Collect: name, phone number, preferred date, preferred time
-3. When you have ALL details, respond with ONLY this JSON (no other text):
-{{"action": "book", "name": "Customer Name", "phone": "1234567890", "date": "YYYY-MM-DD", "time": "HH:MM"}}
+1. Answer questions about our services and pricing
+2. Help customers understand their plumbing issues
+3. If they want to schedule a service, collect: name, phone, address, issue description, preferred date/time
+4. When you have ALL scheduling details, respond with ONLY this JSON:
+{{"action": "schedule", "name": "Customer Name", "phone": "1234567890", "address": "123 Main St", "issue": "leaky faucet", "date": "YYYY-MM-DD", "time": "HH:MM"}}
 
-If details are missing, ask for them naturally. Be concise and helpful."""
+Be helpful, professional, and concise. For emergencies, emphasize our 24/7 availability."""
 
     prompt = f"{system_prompt}\n\nConversation so far:\n{conversation_history}\n\nCustomer: {user_message}\n\nAssistant:"
 
@@ -105,9 +124,9 @@ If details are missing, ask for them naturally. Be concise and helpful."""
 
 
 def extract_booking_json(text):
-    """Extract booking JSON from AI response"""
-    # Look for JSON pattern in the response
-    json_match = re.search(r'\{[^{}]*"action"\s*:\s*"book"[^{}]*\}', text)
+    """Extract booking/scheduling JSON from AI response"""
+    # Look for JSON pattern in the response (book or schedule actions)
+    json_match = re.search(r'\{[^{}]*"action"\s*:\s*"(?:book|schedule)"[^{}]*\}', text)
     if json_match:
         try:
             return json.loads(json_match.group())
@@ -179,32 +198,28 @@ def chat():
     history.append({"role": "Customer", "content": user_message})
     history.append({"role": "Assistant", "content": ai_response})
 
-    # Check if AI wants to make a booking
+    # Check if AI wants to schedule a service
     booking_data = extract_booking_json(ai_response)
     if booking_data:
-        # Make the booking
-        db = get_db()
-        db.execute(
-            'INSERT INTO bookings (name, phone, date, time, status) VALUES (?, ?, ?, ?, ?)',
-            (booking_data['name'], booking_data['phone'], booking_data['date'],
-             booking_data['time'], 'confirmed')
-        )
-        db.commit()
+        # Send Telegram notification for new service request
+        issue = booking_data.get('issue', 'Not specified')
+        address = booking_data.get('address', 'Not specified')
 
-        # Send Telegram notification
         send_telegram(
-            f"📅 <b>New Booking!</b>\n\n"
+            f"🔧 <b>New Service Request!</b>\n\n"
             f"Name: {booking_data['name']}\n"
             f"Phone: {booking_data['phone']}\n"
+            f"Address: {address}\n"
+            f"Issue: {issue}\n"
             f"Date: {booking_data['date']}\n"
             f"Time: {booking_data['time']}"
         )
 
-        # Clear conversation after successful booking
+        # Clear conversation after successful scheduling
         conversations[session_id] = []
 
         return jsonify({
-            "response": f"Great! I've booked your appointment for {booking_data['date']} at {booking_data['time']}. You'll receive a confirmation shortly!",
+            "response": f"I've scheduled your service appointment for {booking_data['date']} at {booking_data['time']}. A technician will contact you shortly to confirm. For emergencies, call (555) 123-4567.",
             "booking": booking_data
         })
 
@@ -218,6 +233,34 @@ def reset_chat():
     if session_id in conversations:
         del conversations[session_id]
     return jsonify({"status": "reset"})
+
+
+@app.route('/api/livekit-token', methods=['POST'])
+def get_livekit_token():
+    """Generate a LiveKit token for voice chat"""
+    data = request.json
+    room_name = data.get('room', 'booking-room')
+    participant_name = data.get('name', f'user-{datetime.now().timestamp()}')
+
+    # Create access token
+    token = api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+    token.with_identity(participant_name)
+    token.with_name(participant_name)
+
+    # Grant permissions
+    grant = api.VideoGrants(
+        room_join=True,
+        room=room_name,
+        can_publish=True,
+        can_subscribe=True
+    )
+    token.with_grants(grant)
+
+    return jsonify({
+        "token": token.to_jwt(),
+        "url": LIVEKIT_URL,
+        "room": room_name
+    })
 
 
 if __name__ == '__main__':

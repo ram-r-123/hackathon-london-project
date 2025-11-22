@@ -1,56 +1,285 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SalesAPE Booking Agent</title>
+    <title>QuickFlow Plumbing - 24/7 Emergency Services</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/livekit-client/dist/livekit-client.umd.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: #1e40af;
+            color: white;
+            padding: 20px 0;
+        }
+
+        .header-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background: #f5f7fa;
-            color: #333;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        h1 {
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo span {
+            color: #60a5fa;
+        }
+
+        .header-phone {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 80px 20px;
             text-align: center;
-            color: #2563eb;
-            margin-bottom: 30px;
         }
 
-        .container {
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .hero-btn {
+            display: inline-block;
+            background: #f59e0b;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+
+        .hero-btn:hover {
+            background: #d97706;
+        }
+
+        /* Services */
+        .services {
+            padding: 60px 20px;
+            background: #f8fafc;
+        }
+
+        .services-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .services h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: #1e40af;
+        }
+
+        .services-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
         }
 
-        @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; }
+        .service-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
-        .card {
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .service-card h3 {
+            margin-bottom: 12px;
+            color: #1e40af;
+        }
+
+        .service-card p {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+
+        /* About */
+        .about {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .about-content { grid-template-columns: 1fr; }
+        }
+
+        .about h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #1e40af;
+        }
+
+        .about p {
+            margin-bottom: 16px;
+            color: #4b5563;
+        }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .stat {
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer p {
+            opacity: 0.8;
+        }
+
+        /* Chat Widget */
+        .chat-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .chat-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #1e40af;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            background: #1d4ed8;
+        }
+
+        .chat-popup {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 380px;
+            max-height: 550px;
             background: white;
             border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .card h2 {
-            margin-top: 0;
+        .chat-popup.open {
+            display: flex;
+        }
+
+        .chat-header {
+            background: #1e40af;
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .chat-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-tab {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .chat-tab.active {
+            background: white;
             color: #1e40af;
-            font-size: 1.25rem;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 12px;
         }
 
-        /* Chat Interface */
-        .chat-container {
+        .chat-body {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            height: 450px;
+            height: 400px;
+        }
+
+        /* Text Chat */
+        .text-chat {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
         .chat-messages {
@@ -58,8 +287,6 @@
             overflow-y: auto;
             padding: 16px;
             background: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 16px;
         }
 
         .message {
@@ -67,11 +294,11 @@
             padding: 10px 14px;
             border-radius: 12px;
             max-width: 85%;
-            line-height: 1.4;
+            font-size: 0.9rem;
         }
 
         .message.user {
-            background: #2563eb;
+            background: #1e40af;
             color: white;
             margin-left: auto;
             border-bottom-right-radius: 4px;
@@ -88,99 +315,143 @@
             color: #dc2626;
         }
 
-        .chat-input-container {
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
             display: flex;
             gap: 8px;
         }
 
         .chat-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
         }
 
         .chat-input:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: #1e40af;
         }
 
         .send-btn {
-            padding: 12px 24px;
-            background: #2563eb;
+            padding: 10px 16px;
+            background: #1e40af;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
         }
 
         .send-btn:hover {
             background: #1d4ed8;
         }
 
-        .send-btn:disabled {
-            background: #9ca3af;
+        /* Voice Chat */
+        .voice-chat {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .voice-chat.active {
+            display: flex;
+        }
+
+        .text-chat.active {
+            display: flex;
+        }
+
+        .voice-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .voice-icon.connected {
+            background: #d1fae5;
+            animation: pulse 2s infinite;
+        }
+
+        .voice-icon.connecting {
+            background: #fef3c7;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .voice-status {
+            margin-bottom: 20px;
+        }
+
+        .voice-status-text {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .voice-status-detail {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .voice-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .voice-btn.connect {
+            background: #10b981;
+            color: white;
+        }
+
+        .voice-btn.disconnect {
+            background: #ef4444;
+            color: white;
+        }
+
+        .voice-btn.mute {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .voice-btn.muted {
+            background: #fecaca;
+            color: #dc2626;
+        }
+
+        .voice-btn:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
-        /* Bookings List */
-        .bookings-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .booking {
-            background: #f9fafb;
-            padding: 16px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #10b981;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .booking-info {
-            flex: 1;
-        }
-
-        .booking-time {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e40af;
-        }
-
-        .booking-details {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-
-        .booking-status {
-            background: #d1fae5;
-            color: #059669;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .no-bookings {
-            text-align: center;
-            color: #9ca3af;
-            padding: 40px 20px;
-        }
-
         .typing {
-            display: inline-block;
             padding: 10px 14px;
             background: #e5e7eb;
             border-radius: 12px;
             color: #6b7280;
+            font-size: 0.9rem;
         }
 
         .typing::after {
@@ -193,78 +464,177 @@
             40% { content: '..'; }
             60%, 100% { content: '...'; }
         }
-
-        .reset-btn {
-            background: none;
-            border: 1px solid #e5e7eb;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-
-        .reset-btn:hover {
-            background: #f3f4f6;
-        }
     </style>
 </head>
 <body>
-    <h1>SalesAPE Booking Agent</h1>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Quick<span>Flow</span> Plumbing</div>
+            <div class="header-phone">Call: (555) 123-4567</div>
+        </div>
+    </header>
 
-    <div class="container">
-        <!-- Chat Interface -->
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Chat with AI Assistant</h2>
-                <button class="reset-btn" onclick="resetChat()">Reset</button>
+    <!-- Hero -->
+    <section class="hero">
+        <h1>24/7 Emergency Plumbing Services</h1>
+        <p>Fast, reliable, and affordable plumbing solutions for your home and business</p>
+        <a href="tel:5551234567" class="hero-btn">Call Now - Free Estimate</a>
+    </section>
+
+    <!-- Services -->
+    <section class="services">
+        <div class="services-content">
+            <h2>Our Services</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">🚰</div>
+                    <h3>Leak Repairs</h3>
+                    <p>Quick detection and repair of all types of leaks to prevent water damage</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🚿</div>
+                    <h3>Drain Cleaning</h3>
+                    <p>Professional drain cleaning to keep your pipes flowing smoothly</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔧</div>
+                    <h3>Pipe Installation</h3>
+                    <p>Expert installation and replacement of pipes for new construction or repairs</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🌡️</div>
+                    <h3>Water Heaters</h3>
+                    <p>Installation, repair, and maintenance of all water heater types</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🚽</div>
+                    <h3>Toilet Repairs</h3>
+                    <p>Fast fixes for clogs, leaks, and all toilet-related issues</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">⚡</div>
+                    <h3>Emergency Service</h3>
+                    <p>Available 24/7 for urgent plumbing emergencies</p>
+                </div>
             </div>
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message bot">
-                        Hi! I'm the SalesAPE booking assistant. I can help you schedule an appointment. What's your name?
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="about">
+        <div class="about-content">
+            <div>
+                <h2>Why Choose QuickFlow?</h2>
+                <p>With over 15 years of experience, QuickFlow Plumbing has been the trusted choice for residential and commercial plumbing in the area.</p>
+                <p>Our licensed and insured technicians are trained to handle any plumbing challenge, from minor repairs to complete system installations.</p>
+                <p>We pride ourselves on transparent pricing, quality workmanship, and exceptional customer service.</p>
+            </div>
+            <div class="about-stats">
+                <div class="stat">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">Years Experience</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">5000+</div>
+                    <div class="stat-label">Jobs Completed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Emergency Service</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 QuickFlow Plumbing. All rights reserved. | Licensed & Insured</p>
+    </footer>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <div class="chat-popup" id="chatPopup">
+            <div class="chat-header">
+                <h3>Chat with Us</h3>
+                <div class="chat-tabs">
+                    <button class="chat-tab active" onclick="switchTab('text')">Text</button>
+                    <button class="chat-tab" onclick="switchTab('voice')">Voice</button>
+                </div>
+            </div>
+            <div class="chat-body">
+                <!-- Text Chat -->
+                <div class="text-chat active" id="textChat">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            Hi! I'm the QuickFlow assistant. How can I help you today? I can answer questions about our services, pricing, or help schedule a visit.
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button class="send-btn" onclick="sendMessage()">Send</button>
                     </div>
                 </div>
-                <div class="chat-input-container">
-                    <input
-                        type="text"
-                        class="chat-input"
-                        id="chatInput"
-                        placeholder="Type your message..."
-                        onkeypress="if(event.key === 'Enter') sendMessage()"
-                    >
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+
+                <!-- Voice Chat -->
+                <div class="voice-chat" id="voiceChat">
+                    <div class="voice-icon" id="voiceIcon">🎙️</div>
+                    <div class="voice-status">
+                        <div class="voice-status-text" id="voiceStatusText">Ready to connect</div>
+                        <div class="voice-status-detail" id="voiceStatusDetail">Click connect to start voice chat</div>
+                    </div>
+                    <div class="voice-controls">
+                        <button class="voice-btn connect" id="connectBtn" onclick="toggleVoiceChat()">Connect</button>
+                        <button class="voice-btn mute" id="muteBtn" onclick="toggleMute()" disabled>Mute</button>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Bookings List -->
-        <div class="card">
-            <h2>Today's Appointments</h2>
-            <div class="bookings-list" id="bookings">
-                <div class="no-bookings">Loading...</div>
-            </div>
-        </div>
+        <button class="chat-toggle" onclick="toggleChat()">💬</button>
     </div>
 
     <script>
         const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+        let room = null;
+        let localParticipant = null;
+        let isMuted = false;
 
-        // Send message to AI
+        // Toggle chat popup
+        function toggleChat() {
+            document.getElementById('chatPopup').classList.toggle('open');
+        }
+
+        // Switch between text and voice tabs
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.chat-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('textChat').classList.remove('active');
+            document.getElementById('voiceChat').classList.remove('active');
+
+            if (tab === 'text') {
+                document.getElementById('textChat').classList.add('active');
+            } else {
+                document.getElementById('voiceChat').classList.add('active');
+            }
+        }
+
+        // Send text message
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const messages = document.getElementById('chatMessages');
-            const sendBtn = document.getElementById('sendBtn');
             const message = input.value.trim();
 
             if (!message) return;
 
-            // Add user message
             messages.innerHTML += `<div class="message user">${escapeHtml(message)}</div>`;
             input.value = '';
-            sendBtn.disabled = true;
 
-            // Show typing indicator
             messages.innerHTML += `<div class="typing" id="typing">Thinking</div>`;
             messages.scrollTop = messages.scrollHeight;
 
@@ -276,87 +646,100 @@
                 });
 
                 const data = await response.json();
-
-                // Remove typing indicator
                 document.getElementById('typing')?.remove();
 
-                // Add bot response
                 const botMessage = data.response || data.error || 'Sorry, something went wrong.';
                 messages.innerHTML += `<div class="message bot">${escapeHtml(botMessage)}</div>`;
-
-                // If booking was made, refresh the list
-                if (data.booking) {
-                    loadBookings();
-                }
             } catch (error) {
                 document.getElementById('typing')?.remove();
-                messages.innerHTML += `<div class="message error">Error: Could not connect to the server.</div>`;
+                messages.innerHTML += `<div class="message error">Error: Could not connect.</div>`;
             }
 
-            sendBtn.disabled = false;
             messages.scrollTop = messages.scrollHeight;
-            input.focus();
         }
 
-        // Reset chat
-        async function resetChat() {
+        // Voice chat functions
+        async function toggleVoiceChat() {
+            if (room && room.state === 'connected') {
+                await room.disconnect();
+                room = null;
+            } else {
+                await connectVoice();
+            }
+        }
+
+        async function connectVoice() {
+            const connectBtn = document.getElementById('connectBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const voiceIcon = document.getElementById('voiceIcon');
+            const voiceStatusText = document.getElementById('voiceStatusText');
+            const voiceStatusDetail = document.getElementById('voiceStatusDetail');
+
             try {
-                await fetch('/chat/reset', {
+                voiceIcon.className = 'voice-icon connecting';
+                voiceStatusText.textContent = 'Connecting...';
+                connectBtn.disabled = true;
+
+                const tokenResponse = await fetch('/api/livekit-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId })
+                    body: JSON.stringify({ room: 'plumbing-support', name: `Customer-${sessionId.slice(-4)}` })
                 });
-            } catch (e) {}
 
-            document.getElementById('chatMessages').innerHTML = `
-                <div class="message bot">
-                    Hi! I'm the SalesAPE booking assistant. I can help you schedule an appointment. What's your name?
-                </div>
-            `;
-        }
+                const tokenData = await tokenResponse.json();
 
-        // Load bookings
-        async function loadBookings() {
-            try {
-                const response = await fetch('/api/bookings');
-                const bookings = await response.json();
+                room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
 
-                const container = document.getElementById('bookings');
+                room.on(LivekitClient.RoomEvent.Connected, () => {
+                    voiceIcon.className = 'voice-icon connected';
+                    voiceStatusText.textContent = 'Connected';
+                    voiceStatusDetail.textContent = 'Voice chat is active';
+                    connectBtn.textContent = 'Disconnect';
+                    connectBtn.className = 'voice-btn disconnect';
+                    connectBtn.disabled = false;
+                    muteBtn.disabled = false;
+                });
 
-                if (bookings.length === 0) {
-                    container.innerHTML = '<div class="no-bookings">No appointments scheduled for today</div>';
-                    return;
-                }
+                room.on(LivekitClient.RoomEvent.Disconnected, () => {
+                    voiceIcon.className = 'voice-icon';
+                    voiceStatusText.textContent = 'Disconnected';
+                    voiceStatusDetail.textContent = 'Click connect to rejoin';
+                    connectBtn.textContent = 'Connect';
+                    connectBtn.className = 'voice-btn connect';
+                    connectBtn.disabled = false;
+                    muteBtn.disabled = true;
+                });
 
-                container.innerHTML = bookings.map(b => `
-                    <div class="booking">
-                        <div class="booking-info">
-                            <div class="booking-time">${escapeHtml(b.time)}</div>
-                            <div class="booking-details">
-                                ${escapeHtml(b.name)} &bull; ${escapeHtml(b.phone)}
-                            </div>
-                        </div>
-                        <span class="booking-status">${escapeHtml(b.status)}</span>
-                    </div>
-                `).join('');
+                await room.connect(tokenData.url, tokenData.token);
+                await room.localParticipant.setMicrophoneEnabled(true);
+                localParticipant = room.localParticipant;
+
             } catch (error) {
-                document.getElementById('bookings').innerHTML =
-                    '<div class="no-bookings">Failed to load bookings</div>';
+                voiceIcon.className = 'voice-icon';
+                voiceStatusText.textContent = 'Connection failed';
+                voiceStatusDetail.textContent = error.message || 'Please try again';
+                connectBtn.disabled = false;
             }
         }
 
-        // Escape HTML to prevent XSS
+        async function toggleMute() {
+            if (!localParticipant) return;
+            isMuted = !isMuted;
+            await localParticipant.setMicrophoneEnabled(!isMuted);
+            const muteBtn = document.getElementById('muteBtn');
+            muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
+            muteBtn.className = isMuted ? 'voice-btn muted' : 'voice-btn mute';
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // Initial load
-        loadBookings();
-
-        // Refresh bookings every 30 seconds
-        setInterval(loadBookings, 30000);
+        window.addEventListener('beforeunload', () => {
+            if (room) room.disconnect();
+        });
     </script>
 </body>
 </html>
