@@ -4,12 +4,18 @@ from datetime import datetime, timedelta
 import sqlite3
 import json
 import re
+from livekit import api
 
 app = Flask(__name__)
 
 # Ollama setup
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "llama3.2"  # Change to your preferred model
+
+# LiveKit setup - get these from your LiveKit Cloud dashboard or self-hosted instance
+LIVEKIT_URL = "wss://your-livekit-server.livekit.cloud"  # Replace with your LiveKit URL
+LIVEKIT_API_KEY = "your-api-key"  # Replace with your API key
+LIVEKIT_API_SECRET = "your-api-secret"  # Replace with your API secret
 
 # Telegram setup (message @BotFather on Telegram, type /newbot to get these)
 TELEGRAM_BOT_TOKEN = '8476030398:AAGjXQbdHrAjrFO4cC2M89S1m96XE6AFt1g'
@@ -218,6 +224,34 @@ def reset_chat():
     if session_id in conversations:
         del conversations[session_id]
     return jsonify({"status": "reset"})
+
+
+@app.route('/api/livekit-token', methods=['POST'])
+def get_livekit_token():
+    """Generate a LiveKit token for voice chat"""
+    data = request.json
+    room_name = data.get('room', 'booking-room')
+    participant_name = data.get('name', f'user-{datetime.now().timestamp()}')
+
+    # Create access token
+    token = api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+    token.with_identity(participant_name)
+    token.with_name(participant_name)
+
+    # Grant permissions
+    grant = api.VideoGrants(
+        room_join=True,
+        room=room_name,
+        can_publish=True,
+        can_subscribe=True
+    )
+    token.with_grants(grant)
+
+    return jsonify({
+        "token": token.to_jwt(),
+        "url": LIVEKIT_URL,
+        "room": room_name
+    })
 
 
 if __name__ == '__main__':

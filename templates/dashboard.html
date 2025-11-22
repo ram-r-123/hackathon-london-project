@@ -3,12 +3,13 @@
 <head>
     <title>SalesAPE Booking Agent</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/livekit-client/dist/livekit-client.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
             background: #f5f7fa;
@@ -23,8 +24,12 @@
 
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -127,6 +132,140 @@
             cursor: not-allowed;
         }
 
+        /* Voice Chat */
+        .voice-container {
+            display: flex;
+            flex-direction: column;
+            height: 450px;
+        }
+
+        .voice-status {
+            text-align: center;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .voice-status-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 32px;
+        }
+
+        .voice-status-icon.connected {
+            background: #d1fae5;
+            animation: pulse 2s infinite;
+        }
+
+        .voice-status-icon.connecting {
+            background: #fef3c7;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        .voice-status-text {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .voice-status-detail {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .voice-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-btn.connect {
+            background: #10b981;
+            color: white;
+        }
+
+        .voice-btn.connect:hover {
+            background: #059669;
+        }
+
+        .voice-btn.disconnect {
+            background: #ef4444;
+            color: white;
+        }
+
+        .voice-btn.disconnect:hover {
+            background: #dc2626;
+        }
+
+        .voice-btn.mute {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .voice-btn.mute:hover {
+            background: #e5e7eb;
+        }
+
+        .voice-btn.muted {
+            background: #fecaca;
+            color: #dc2626;
+        }
+
+        .voice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .participants {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .participant {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .participant-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
         /* Bookings List */
         .bookings-list {
             max-height: 400px;
@@ -216,7 +355,7 @@
         <!-- Chat Interface -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Chat with AI Assistant</h2>
+                <h2>Text Chat</h2>
                 <button class="reset-btn" onclick="resetChat()">Reset</button>
             </div>
             <div class="chat-container">
@@ -238,6 +377,30 @@
             </div>
         </div>
 
+        <!-- Voice Chat Interface -->
+        <div class="card">
+            <h2>Voice Chat</h2>
+            <div class="voice-container">
+                <div class="voice-status">
+                    <div class="voice-status-icon" id="voiceIcon">🎙️</div>
+                    <div class="voice-status-text" id="voiceStatusText">Ready to connect</div>
+                    <div class="voice-status-detail" id="voiceStatusDetail">Click connect to start voice chat</div>
+                </div>
+                <div class="voice-controls">
+                    <button class="voice-btn connect" id="connectBtn" onclick="toggleVoiceChat()">
+                        Connect
+                    </button>
+                    <button class="voice-btn mute" id="muteBtn" onclick="toggleMute()" disabled>
+                        Mute
+                    </button>
+                </div>
+                <div class="participants" id="participants" style="display: none;">
+                    <strong>Participants:</strong>
+                    <div id="participantList"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Bookings List -->
         <div class="card">
             <h2>Today's Appointments</h2>
@@ -249,6 +412,11 @@
 
     <script>
         const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+
+        // LiveKit variables
+        let room = null;
+        let localParticipant = null;
+        let isMuted = false;
 
         // Send message to AI
         async function sendMessage() {
@@ -315,6 +483,144 @@
             `;
         }
 
+        // Voice Chat Functions
+        async function toggleVoiceChat() {
+            if (room && room.state === 'connected') {
+                await disconnectVoice();
+            } else {
+                await connectVoice();
+            }
+        }
+
+        async function connectVoice() {
+            const connectBtn = document.getElementById('connectBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const voiceIcon = document.getElementById('voiceIcon');
+            const voiceStatusText = document.getElementById('voiceStatusText');
+            const voiceStatusDetail = document.getElementById('voiceStatusDetail');
+
+            try {
+                // Update UI to connecting state
+                voiceIcon.className = 'voice-status-icon connecting';
+                voiceStatusText.textContent = 'Connecting...';
+                voiceStatusDetail.textContent = 'Please wait';
+                connectBtn.disabled = true;
+
+                // Get token from server
+                const tokenResponse = await fetch('/api/livekit-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        room: 'booking-room',
+                        name: `User-${sessionId.slice(-4)}`
+                    })
+                });
+
+                const tokenData = await tokenResponse.json();
+
+                // Create and connect to room
+                room = new LivekitClient.Room({
+                    adaptiveStream: true,
+                    dynacast: true,
+                });
+
+                // Set up event listeners
+                room.on(LivekitClient.RoomEvent.Connected, () => {
+                    voiceIcon.className = 'voice-status-icon connected';
+                    voiceStatusText.textContent = 'Connected';
+                    voiceStatusDetail.textContent = 'Voice chat is active';
+                    connectBtn.textContent = 'Disconnect';
+                    connectBtn.className = 'voice-btn disconnect';
+                    connectBtn.disabled = false;
+                    muteBtn.disabled = false;
+                    updateParticipants();
+                });
+
+                room.on(LivekitClient.RoomEvent.Disconnected, () => {
+                    voiceIcon.className = 'voice-status-icon';
+                    voiceStatusText.textContent = 'Disconnected';
+                    voiceStatusDetail.textContent = 'Click connect to rejoin';
+                    connectBtn.textContent = 'Connect';
+                    connectBtn.className = 'voice-btn connect';
+                    connectBtn.disabled = false;
+                    muteBtn.disabled = true;
+                    document.getElementById('participants').style.display = 'none';
+                });
+
+                room.on(LivekitClient.RoomEvent.ParticipantConnected, updateParticipants);
+                room.on(LivekitClient.RoomEvent.ParticipantDisconnected, updateParticipants);
+
+                // Connect to room
+                await room.connect(tokenData.url, tokenData.token);
+
+                // Enable microphone
+                await room.localParticipant.setMicrophoneEnabled(true);
+                localParticipant = room.localParticipant;
+
+            } catch (error) {
+                console.error('Voice connection error:', error);
+                voiceIcon.className = 'voice-status-icon';
+                voiceStatusText.textContent = 'Connection failed';
+                voiceStatusDetail.textContent = error.message || 'Please try again';
+                connectBtn.disabled = false;
+                connectBtn.textContent = 'Connect';
+                connectBtn.className = 'voice-btn connect';
+            }
+        }
+
+        async function disconnectVoice() {
+            if (room) {
+                await room.disconnect();
+                room = null;
+            }
+        }
+
+        async function toggleMute() {
+            if (!localParticipant) return;
+
+            const muteBtn = document.getElementById('muteBtn');
+            isMuted = !isMuted;
+
+            await localParticipant.setMicrophoneEnabled(!isMuted);
+
+            if (isMuted) {
+                muteBtn.textContent = 'Unmute';
+                muteBtn.className = 'voice-btn muted';
+            } else {
+                muteBtn.textContent = 'Mute';
+                muteBtn.className = 'voice-btn mute';
+            }
+        }
+
+        function updateParticipants() {
+            if (!room) return;
+
+            const participantsDiv = document.getElementById('participants');
+            const participantList = document.getElementById('participantList');
+
+            const participants = Array.from(room.remoteParticipants.values());
+
+            if (participants.length > 0 || room.localParticipant) {
+                participantsDiv.style.display = 'block';
+
+                let html = `<div class="participant">
+                    <span class="participant-indicator"></span>
+                    You (${room.localParticipant.identity})
+                </div>`;
+
+                participants.forEach(p => {
+                    html += `<div class="participant">
+                        <span class="participant-indicator"></span>
+                        ${escapeHtml(p.identity)}
+                    </div>`;
+                });
+
+                participantList.innerHTML = html;
+            } else {
+                participantsDiv.style.display = 'none';
+            }
+        }
+
         // Load bookings
         async function loadBookings() {
             try {
@@ -357,6 +663,13 @@
 
         // Refresh bookings every 30 seconds
         setInterval(loadBookings, 30000);
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (room) {
+                room.disconnect();
+            }
+        });
     </script>
 </body>
 </html>
