@@ -14,8 +14,8 @@ OLLAMA_MODEL = "llama3.2"  # Change to your preferred model
 
 # LiveKit setup - get these from your LiveKit Cloud dashboard or self-hosted instance
 LIVEKIT_URL = "wss://chatbot-ioizuto6.livekit.cloud"
-LIVEKIT_API_KEY = "your-api-key"  # Replace with your API key
-LIVEKIT_API_SECRET = "your-api-secret"  # Replace with your API secret
+LIVEKIT_API_KEY = "APIPU2w83w39yiy"
+LIVEKIT_API_SECRET = "bbHofJrpBTQHlqU6gS6G5CoiUrhhyogAdGhI4q2EYpC"
 
 # Telegram setup (message @BotFather on Telegram, type /newbot to get these)
 TELEGRAM_BOT_TOKEN = '8476030398:AAGjXQbdHrAjrFO4cC2M89S1m96XE6AFt1g'
