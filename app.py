@@ -13,7 +13,7 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "llama3.2"  # Change to your preferred model
 
 # LiveKit setup - get these from your LiveKit Cloud dashboard or self-hosted instance
-LIVEKIT_URL = "wss://your-livekit-server.livekit.cloud"  # Replace with your LiveKit URL
+LIVEKIT_URL = "wss://chatbot-ioizuto6.livekit.cloud"
 LIVEKIT_API_KEY = "your-api-key"  # Replace with your API key
 LIVEKIT_API_SECRET = "your-api-secret"  # Replace with your API secret
 
